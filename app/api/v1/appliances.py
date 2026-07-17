@@ -8,6 +8,7 @@ from app.core.dependencies import require_admin
 from app.crud.appliance import appliance_crud
 from app.db.session import get_db
 from app.schemas.appliance import ApplianceCreate, ApplianceUpdate, ApplianceOut
+from app.schemas.response import ok
 
 router = APIRouter()
 
@@ -22,7 +23,7 @@ async def create_appliance(
     db.commit()
     db.refresh(appliance)
 
-    return ApplianceOut.model_validate(appliance).model_dump()
+    return ok(data=ApplianceOut.model_validate(appliance).model_dump(), msg="创建成功")
 
 
 @router.get("")
@@ -34,10 +35,10 @@ async def list_appliances(
     appliances = appliance_crud.get_list(db)
     total = appliance_crud.get_count(db)
 
-    return {
+    return ok(data={
         "total": total,
         "items": [ApplianceOut.model_validate(a).model_dump() for a in appliances],
-    }
+    })
 
 
 @router.put("/{appliance_id}", dependencies=[Depends(require_admin)])
@@ -55,10 +56,10 @@ async def update_appliance(
     db.commit()
     db.refresh(appliance)
 
-    return ApplianceOut.model_validate(appliance).model_dump()
+    return ok(data=ApplianceOut.model_validate(appliance).model_dump(), msg="修改成功")
 
 
-@router.delete("/{appliance_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_admin)])
+@router.delete("/{appliance_id}", dependencies=[Depends(require_admin)])
 async def delete_appliance(
     appliance_id: int,
     db: Session = Depends(get_db),
@@ -77,4 +78,4 @@ async def delete_appliance(
     appliance_crud.delete(db, id=appliance_id)
     db.commit()
 
-    return None
+    return ok(msg="删除成功")

@@ -9,6 +9,7 @@ from app.crud.community import community_crud
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.community import CommunityCreate, CommunityUpdate, CommunityOut, CommunitySimple
+from app.schemas.response import ok
 
 router = APIRouter()
 
@@ -30,7 +31,7 @@ async def create_community(
     db.commit()
     db.refresh(community)
 
-    return CommunityOut.model_validate(community).model_dump()
+    return ok(data=CommunityOut.model_validate(community).model_dump(), msg="创建成功")
 
 
 @router.get("")
@@ -52,12 +53,12 @@ async def list_communities(
     else:
         items = [CommunityOut.model_validate(c).model_dump() for c in communities]
 
-    return {
+    return ok(data={
         "total": total,
         "page": page,
         "size": size,
         "items": items,
-    }
+    })
 
 
 @router.put("/{community_id}", dependencies=[Depends(require_admin)])
@@ -84,10 +85,10 @@ async def update_community(
     db.commit()
     db.refresh(community)
 
-    return CommunityOut.model_validate(community).model_dump()
+    return ok(data=CommunityOut.model_validate(community).model_dump(), msg="修改成功")
 
 
-@router.delete("/{community_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_admin)])
+@router.delete("/{community_id}", dependencies=[Depends(require_admin)])
 async def delete_community(
     community_id: int,
     db: Session = Depends(get_db),
@@ -106,4 +107,4 @@ async def delete_community(
     community_crud.delete(db, id=community_id)
     db.commit()
 
-    return None
+    return ok(msg="删除成功")

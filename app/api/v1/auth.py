@@ -6,6 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.schemas.response import ok
 from app.services.auth_service import auth_service
 
 router = APIRouter()
@@ -27,7 +28,7 @@ async def login(
 
     token = auth_service.create_token(user)
 
-    return {
+    return ok(data={
         "access_token": token,
         "token_type": "bearer",
-    }
+    })

@@ -11,6 +11,7 @@ from app.crud.house import house_crud
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.house import HouseCreate, HouseUpdate, HouseStatusUpdate
+from app.schemas.response import ok
 from app.services.house_service import house_service
 
 router = APIRouter()
@@ -28,7 +29,7 @@ async def create_house(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    return {"id": house.id}
+    return ok(data={"id": house.id}, msg="创建成功")
 
 
 @router.get("")
@@ -67,12 +68,12 @@ async def list_houses(
         end_date=end_date,
     )
 
-    return {
+    return ok(data={
         "total": total,
         "page": page,
         "size": size,
         "items": items,
-    }
+    })
 
 
 @router.get("/{house_id}")
@@ -86,7 +87,7 @@ async def get_house(
     if not detail:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="房源不存在")
 
-    return detail
+    return ok(data=detail)
 
 
 @router.put("/{house_id}")
@@ -106,7 +107,7 @@ async def update_house(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    return {"id": house.id}
+    return ok(data={"id": house.id}, msg="更新成功")
 
 
 @router.patch("/{house_id}")
@@ -126,10 +127,10 @@ async def patch_house(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    return {"id": house.id, "status": house.status}
+    return ok(data={"id": house.id, "status": house.status}, msg="状态更新成功")
 
 
-@router.delete("/{house_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{house_id}")
 async def delete_house(
     house_id: int,
     db: Session = Depends(get_db),
@@ -142,4 +143,4 @@ async def delete_house(
 
     house_service.delete_house(db, house=house)
 
-    return None
+    return ok(msg="删除成功")

@@ -9,6 +9,7 @@ from app.core.security import hash_password
 from app.crud.user import user_crud
 from app.db.session import get_db
 from app.models.user import User
+from app.schemas.response import ok
 from app.schemas.user import UserCreate, UserUpdate, UserOut
 
 router = APIRouter()
@@ -17,7 +18,7 @@ router = APIRouter()
 @router.get("/me")
 async def get_me(current_user: User = Depends(get_current_user)):
     """获取当前登录用户信息"""
-    return UserOut.model_validate(current_user).model_dump()
+    return ok(data=UserOut.model_validate(current_user).model_dump())
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_admin)])
@@ -34,7 +35,7 @@ async def create_user(
     db.commit()
     db.refresh(user)
 
-    return UserOut.model_validate(user).model_dump()
+    return ok(data=UserOut.model_validate(user).model_dump(), msg="创建成功")
 
 
 @router.get("", dependencies=[Depends(require_admin)])
@@ -48,12 +49,12 @@ async def list_users(
     users = user_crud.get_multi(db, skip=skip, limit=size)
     total = user_crud.get_count(db)
 
-    return {
+    return ok(data={
         "total": total,
         "page": page,
         "size": size,
         "items": [UserOut.model_validate(u).model_dump() for u in users],
-    }
+    })
 
 
 @router.put("/{user_id}", dependencies=[Depends(require_admin)])
@@ -76,10 +77,10 @@ async def update_user(
     db.commit()
     db.refresh(user)
 
-    return UserOut.model_validate(user).model_dump()
+    return ok(data=UserOut.model_validate(user).model_dump(), msg="修改成功")
 
 
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_admin)])
+@router.delete("/{user_id}", dependencies=[Depends(require_admin)])
 async def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
@@ -99,4 +100,4 @@ async def delete_user(
     user_crud.delete(db, id=user_id)
     db.commit()
 
-    return None
+    return ok(msg="删除成功")
