@@ -4,8 +4,9 @@
 from datetime import datetime, date
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
+from app.schemas import fmt_datetime
 from app.schemas.contact import ContactCreate, ContactOut
 from app.schemas.community import CommunitySimple
 
@@ -115,6 +116,10 @@ class HouseListOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
+    @field_serializer("created_at", "updated_at")
+    def serialize_datetime(self, value: datetime) -> str:
+        return fmt_datetime(value)
+
 
 class HouseDetailOut(BaseModel):
     """房源详情（含联系人、家电）"""
@@ -141,6 +146,10 @@ class HouseDetailOut(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_serializer("created_at", "updated_at")
+    def serialize_datetime(self, value: datetime) -> str:
+        return fmt_datetime(value)
 
 
 class PaginatedResponse(BaseModel):
