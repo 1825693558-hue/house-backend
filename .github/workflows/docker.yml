@@ -43,7 +43,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Trigger server update
-        if: secrets.WEBHOOK_URL != ''
+        if: ${{ secrets.WEBHOOK_URL != '' }}
         run: |
           curl -X POST ${{ secrets.WEBHOOK_URL }} \
             -H "Authorization: Bearer ${{ secrets.WEBHOOK_TOKEN }}" \
