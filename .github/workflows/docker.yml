@@ -10,10 +10,6 @@ on:
   push:
     branches: [main, master]
 
-env:
-  REGISTRY: docker.io
-  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/ai-house-backend
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -37,15 +33,18 @@ jobs:
           file: Dockerfile
           push: true
           tags: |
-            ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/ai-house-backend:latest
+            ${{ secrets.DOCKER_USERNAME }}/ai-house-backend:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Trigger server update
-        if: ${{ secrets.WEBHOOK_URL != '' }}
+        if: env.WEBHOOK_URL != ''
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          WEBHOOK_TOKEN: ${{ secrets.WEBHOOK_TOKEN }}
         run: |
-          curl -X POST ${{ secrets.WEBHOOK_URL }} \
-            -H "Authorization: Bearer ${{ secrets.WEBHOOK_TOKEN }}" \
+          curl -X POST "$WEBHOOK_URL" \
+            -H "Authorization: Bearer $WEBHOOK_TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{"service":"backend","image":"${{ env.IMAGE_NAME }}:latest"}'
+            -d '{"service":"backend","image":"${{ secrets.DOCKER_USERNAME }}/ai-house-backend:latest"}'
