@@ -10,7 +10,10 @@ from app.schemas.user import UserCreate, UserUpdate
 
 class CRUDUser(CRUDBase[User]):
     def get_by_username(self, db: Session, username: str) -> User | None:
-        return db.query(User).filter(User.username == username).first()
+        return db.query(User).filter(
+            User.username == username,
+            User.is_deleted == False,  # noqa: E712
+        ).first()
 
     def create(self, db: Session, obj_in: UserCreate, password_hash: str) -> User:
         db_obj = User(

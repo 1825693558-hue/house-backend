@@ -136,7 +136,7 @@ async def delete_house(
     db: Session = Depends(get_db),
     _current_user: User = Depends(get_current_user),
 ):
-    """删除房源（级联删除联系人和家电关联）"""
+    """删除房源（软删除）"""
     house = house_crud.get(db, id=house_id)
     if not house:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="房源不存在")

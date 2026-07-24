@@ -34,7 +34,10 @@ def get_current_user(
             detail="Token 中缺少用户标识",
         )
 
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    user = db.query(User).filter(
+        User.id == int(user_id),
+        User.is_deleted == False,  # noqa: E712
+    ).first()
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

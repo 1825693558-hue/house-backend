@@ -4,7 +4,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import HTTPException as FastAPIHTTPException
+from fastapi.exceptions import HTTPException as FastAPIHTTPException, RequestValidationError
 
 from app.api.v1 import auth, houses, communities, appliances, users
 from app.core.config import settings
@@ -40,6 +40,19 @@ async def http_exception_handler(request: Request, exc: FastAPIHTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content=fail(code=exc.status_code, msg=exc.detail),
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """请求参数校验失败统一包装"""
+    errors = []
+    for err in exc.errors():
+        loc = '.'.join(str(x) for x in err.get('loc', []) if x != 'body')
+        errors.append(f"{loc or 'body'}: {err.get('msg', '')}" if loc else err.get('msg', ''))
+    return JSONResponse(
+        status_code=422,
+        content=fail(code=422, msg='; '.join(errors) if errors else '参数校验失败'),
     )
 
 

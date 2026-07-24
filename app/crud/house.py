@@ -50,29 +50,30 @@ class CRUDHouse(CRUDBase[House]):
         多条件查询房源
         返回: (列表数据, 总数)
         """
-        # 基础查询 - 左连接 community 获取名称
+        # 基础查询 - 左连接 community 获取名称，过滤已删除记录
         query = (
             db.query(
                 House,
                 Community.name.label("community_name"),
             )
             .outerjoin(Community, House.community_id == Community.id)
+            .filter(House.is_deleted == False)  # noqa: E712
         )
-        count_query = db.query(func.count(House.id))
+        count_query = db.query(func.count(House.id)).filter(
+            House.is_deleted == False,  # noqa: E712
+        )
 
         # 关键词搜索
         if keyword:
             like_pattern = f"%{keyword}%"
             query = query.filter(
                 or_(
-                    House.title.contains(keyword),
                     Community.name.contains(keyword),
                     House.address.contains(keyword),
                 )
             )
             count_query = count_query.filter(
                 or_(
-                    House.title.contains(keyword),
                     Community.name.contains(keyword),
                     House.address.contains(keyword),
                 )
@@ -133,7 +134,6 @@ class CRUDHouse(CRUDBase[House]):
         for house, community_name in results:
             item = {
                 "id": house.id,
-                "title": house.title,
                 "community_id": house.community_id,
                 "community_name": community_name,
                 "address": house.address,
@@ -141,6 +141,9 @@ class CRUDHouse(CRUDBase[House]):
                 "floor": house.floor,
                 "total_floors": house.total_floors,
                 "price": float(house.price) if house.price else None,
+                "sale_price": float(house.sale_price) if house.sale_price else None,
+                "rent_price": float(house.rent_price) if house.rent_price else None,
+                "price_note": house.price_note,
                 "status": house.status,
                 "house_type": house.house_type,
                 "decoration": house.decoration,

@@ -1,6 +1,8 @@
 """
 房源业务逻辑 - 包含状态流转校验
 """
+from datetime import datetime
+
 from sqlalchemy import orm
 from sqlalchemy.orm import Session
 
@@ -153,8 +155,9 @@ class HouseService:
 
     @staticmethod
     def delete_house(db: Session, house: House) -> None:
-        """删除房源（级联删除联系人、家电关联）"""
-        db.delete(house)
+        """软删除房源（标记 is_deleted，不物理删除）"""
+        house.is_deleted = True
+        house.deleted_at = datetime.now()
         db.commit()
 
     @staticmethod
@@ -163,7 +166,10 @@ class HouseService:
         house = (
             db.query(House)
             .options(orm.selectinload(House.community))
-            .filter(House.id == house_id)
+            .filter(
+                House.id == house_id,
+                House.is_deleted == False,  # noqa: E712
+            )
             .first()
         )
         if not house:
@@ -204,7 +210,6 @@ class HouseService:
 
         return {
             "id": house.id,
-            "title": house.title,
             "community_id": house.community_id,
             "community": {
                 "id": house.community.id,
@@ -215,6 +220,9 @@ class HouseService:
             "floor": house.floor,
             "total_floors": house.total_floors,
             "price": float(house.price) if house.price else None,
+            "sale_price": float(house.sale_price) if house.sale_price else None,
+            "rent_price": float(house.rent_price) if house.rent_price else None,
+            "price_note": house.price_note,
             "status": house.status,
             "house_type": house.house_type,
             "decoration": house.decoration,

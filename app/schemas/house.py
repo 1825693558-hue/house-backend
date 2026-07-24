@@ -32,13 +32,15 @@ class ApplianceOut(BaseModel):
 # ---------- 请求 ----------
 
 class HouseCreate(BaseModel):
-    title: str = Field(..., min_length=1, max_length=100, description="房源标题")
     community_id: int | None = Field(None, description="关联小区ID")
     address: str | None = Field(None, max_length=200, description="楼号/单元/门牌")
     area: float | None = Field(None, ge=0, description="面积(平方米)")
     floor: int | None = Field(None, ge=0, description="所在楼层")
     total_floors: int | None = Field(None, ge=0, description="总楼层数")
-    price: float | None = Field(None, ge=0, description="价格")
+    price: float | None = Field(None, ge=0, description="价格(兼容旧数据)")
+    sale_price: float | None = Field(None, ge=0, description="出售价格(万元)")
+    rent_price: float | None = Field(None, ge=0, description="出租价格(元/月)")
+    price_note: str | None = Field(None, max_length=200, description="价格备注")
     status: str = Field(default="空闲", description="房源状态")
     house_type: str | None = Field(None, description="房源类型")
     decoration: str | None = Field(None, description="装修状况")
@@ -52,13 +54,15 @@ class HouseCreate(BaseModel):
 
 
 class HouseUpdate(BaseModel):
-    title: str | None = Field(None, min_length=1, max_length=100)
     community_id: int | None = Field(None)
     address: str | None = Field(None, max_length=200)
     area: float | None = Field(None, ge=0)
     floor: int | None = Field(None, ge=0)
     total_floors: int | None = Field(None, ge=0)
     price: float | None = Field(None, ge=0)
+    sale_price: float | None = Field(None, ge=0)
+    rent_price: float | None = Field(None, ge=0)
+    price_note: str | None = Field(None, max_length=200)
     house_type: str | None = None
     decoration: str | None = None
     key_type: str | None = None
@@ -97,7 +101,6 @@ class HouseQuery(BaseModel):
 class HouseListOut(BaseModel):
     """列表项（不含联系人/家电详情）"""
     id: int
-    title: str
     community_id: int | None
     community_name: str | None = None
     address: str | None
@@ -105,6 +108,9 @@ class HouseListOut(BaseModel):
     floor: int | None
     total_floors: int | None
     price: float | None
+    sale_price: float | None = None
+    rent_price: float | None = None
+    price_note: str | None = None
     status: str
     house_type: str | None
     decoration: str | None
@@ -124,7 +130,6 @@ class HouseListOut(BaseModel):
 class HouseDetailOut(BaseModel):
     """房源详情（含联系人、家电）"""
     id: int
-    title: str
     community_id: int | None
     community: CommunitySimple | None = None
     address: str | None
@@ -132,6 +137,9 @@ class HouseDetailOut(BaseModel):
     floor: int | None
     total_floors: int | None
     price: float | None
+    sale_price: float | None = None
+    rent_price: float | None = None
+    price_note: str | None = None
     status: str
     house_type: str | None
     decoration: str | None

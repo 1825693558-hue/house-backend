@@ -1,8 +1,10 @@
 """
 数据库连接与会话管理
 """
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, create_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 from app.core.config import settings
 
@@ -18,7 +20,17 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-class Base(DeclarativeBase):
+class SoftDeleteMixin:
+    """软删除混入 - 所有模型自动继承，提供 is_deleted 和 deleted_at 字段"""
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False, comment="是否删除"
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True, comment="删除时间"
+    )
+
+
+class Base(DeclarativeBase, SoftDeleteMixin):
     pass
 
 

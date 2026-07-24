@@ -26,7 +26,6 @@ class House(Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    title: Mapped[str] = mapped_column(String(100), nullable=False, comment="房源标题")
 
     # 小区关联
     community_id: Mapped[int | None] = mapped_column(
@@ -40,7 +39,10 @@ class House(Base):
     area: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True, comment="面积(平方米)")
     floor: Mapped[int | None] = mapped_column(Integer, nullable=True, comment="所在楼层")
     total_floors: Mapped[int | None] = mapped_column(Integer, nullable=True, comment="总楼层数")
-    price: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True, comment="价格")
+    price: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True, comment="价格(兼容旧数据)")
+    sale_price: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True, comment="出售价格(万元)")
+    rent_price: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True, comment="出租价格(元/月)")
+    price_note: Mapped[str | None] = mapped_column(String(200), nullable=True, comment="价格备注")
 
     # 状态与类型
     status: Mapped[str] = mapped_column(

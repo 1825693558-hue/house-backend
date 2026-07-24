@@ -1,23 +1,27 @@
 """
-基础 CRUD 封装 - 通用数据库操作
+基础 CRUD 封装 - 通用数据库操作（含软删除）
 """
-from typing import TypeVar, Generic, Type, Any, Sequence
+from datetime import datetime
+from typing import TypeVar, Generic, Type, Sequence
 
 from pydantic import BaseModel
-from sqlalchemy import Select, func, select
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 ModelType = TypeVar("ModelType")
 
 
 class CRUDBase(Generic[ModelType]):
-    """通用 CRUD 基类"""
+    """通用 CRUD 基类 - 默认过滤已删除记录，delete 为软删除"""
 
     def __init__(self, model: Type[ModelType]):
         self.model = model
 
     def get(self, db: Session, id: int) -> ModelType | None:
-        return db.query(self.model).filter(self.model.id == id).first()
+        return db.query(self.model).filter(
+            self.model.id == id,
+            self.model.is_deleted == False,  # noqa: E712
+        ).first()
 
     def get_multi(
         self,
@@ -26,10 +30,14 @@ class CRUDBase(Generic[ModelType]):
         skip: int = 0,
         limit: int = 20,
     ) -> Sequence[ModelType]:
-        return db.query(self.model).offset(skip).limit(limit).all()
+        return db.query(self.model).filter(
+            self.model.is_deleted == False,  # noqa: E712
+        ).offset(skip).limit(limit).all()
 
     def get_count(self, db: Session) -> int:
-        return db.query(func.count(self.model.id)).scalar() or 0
+        return db.query(func.count(self.model.id)).filter(
+            self.model.is_deleted == False,  # noqa: E712
+        ).scalar() or 0
 
     def create(self, db: Session, obj_in: BaseModel | dict) -> ModelType:
         if isinstance(obj_in, BaseModel):
@@ -59,9 +67,14 @@ class CRUDBase(Generic[ModelType]):
         return db_obj
 
     def delete(self, db: Session, id: int) -> bool:
-        obj = db.query(self.model).filter(self.model.id == id).first()
+        """软删除 - 标记 is_deleted=True 并记录删除时间"""
+        obj = db.query(self.model).filter(
+            self.model.id == id,
+            self.model.is_deleted == False,  # noqa: E712
+        ).first()
         if obj:
-            db.delete(obj)
+            obj.is_deleted = True
+            obj.deleted_at = datetime.now()
             db.flush()
             return True
         return False
