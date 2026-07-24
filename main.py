@@ -76,3 +76,9 @@ app.include_router(users.router, prefix="/api/v1/users", tags=["账号"])
 @app.get("/", tags=["健康检查"])
 async def root():
     return ok(msg="房源管理系统 API 服务运行中")
+
+
+@app.get("/api/v1/health", tags=["健康检查"])
+async def health():
+    """健康检查端点，供 Docker healthcheck 和 Webhook 更新脚本使用"""
+    return ok(data={"status": "healthy"})
