@@ -4,19 +4,36 @@
 from datetime import datetime, date
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field, field_serializer, model_validator
 
 from app.schemas import fmt_datetime
 from app.schemas.contact import ContactCreate, ContactOut
 from app.schemas.community import CommunitySimple
 
 
+# ---------- 媒体文件 ----------
+
+class MediaItem(BaseModel):
+    """媒体文件项"""
+    type: str  # "image" | "video"
+    url: str
+    cover: str | None = None  # 视频封面
+
+
 # ---------- 联系人/家电嵌套 ----------
 
 class ApplianceBind(BaseModel):
-    """绑定家电到房源"""
+    """绑定家电到房源（支持整数 ID 或对象格式）"""
     appliance_id: int
     note: str | None = None
+
+    @model_validator(mode='before')
+    @classmethod
+    def convert_int_to_dict(cls, data):
+        """兼容前端传整数数组 [1, 2, 3] 的情况"""
+        if isinstance(data, int):
+            return {"appliance_id": data}
+        return data
 
 
 class ApplianceOut(BaseModel):
@@ -46,6 +63,7 @@ class HouseCreate(BaseModel):
     decoration: str | None = Field(None, description="装修状况")
     key_type: str = Field(default="无钥匙", description="钥匙类型")
     lock_password: str | None = Field(None, description="密码锁密码(明文，后端加密存储)")
+    media: list[MediaItem] | None = Field(None, description="媒体文件数组(图片+视频)")
     video_url: str | None = Field(None, max_length=500, description="视频URL")
     images: list[str] | None = Field(None, description="图片URL数组")
     description: str | None = Field(None, description="房源描述")
@@ -67,6 +85,7 @@ class HouseUpdate(BaseModel):
     decoration: str | None = None
     key_type: str | None = None
     lock_password: str | None = Field(None, description="密码锁密码(明文，传了才更新)")
+    media: list[MediaItem] | None = None
     video_url: str | None = Field(None, max_length=500)
     images: list[str] | None = None
     description: str | None = None
@@ -145,6 +164,7 @@ class HouseDetailOut(BaseModel):
     decoration: str | None
     key_type: str
     lock_password: str | None = Field(None, description="密码锁密码(已解密)")
+    media: list[MediaItem] | None = None
     video_url: str | None
     images: list[str] | None = None
     description: str | None
