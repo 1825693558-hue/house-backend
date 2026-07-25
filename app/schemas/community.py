@@ -13,11 +13,13 @@ from app.schemas import fmt_datetime
 class CommunityCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, description="小区名称")
     address: str | None = Field(None, max_length=200, description="小区地址")
+    sort_order: int = Field(default=0, ge=0, description="排序权重")
 
 
 class CommunityUpdate(BaseModel):
     name: str | None = Field(None, min_length=1, max_length=100, description="小区名称")
     address: str | None = Field(None, max_length=200, description="小区地址")
+    sort_order: int | None = Field(None, ge=0, description="排序权重")
 
 
 # ---------- 响应 ----------
@@ -26,6 +28,7 @@ class CommunityOut(BaseModel):
     id: int
     name: str
     address: str | None
+    sort_order: int
     created_at: datetime
 
     model_config = {"from_attributes": True}

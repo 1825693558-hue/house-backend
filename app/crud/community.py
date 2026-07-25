@@ -22,8 +22,8 @@ class CRUDCommunity(CRUDBase[Community]):
         keyword: str | None = None,
         skip: int = 0,
         limit: int = 100,
-        sort_by: str = "id",
-        sort_order: str = "desc",
+        sort_by: str = "sort_order",
+        sort_order: str = "asc",
     ) -> list[Community]:
         query = db.query(Community).filter(
             Community.is_deleted == False,  # noqa: E712
@@ -32,14 +32,14 @@ class CRUDCommunity(CRUDBase[Community]):
             query = query.filter(Community.name.contains(keyword))
 
         # 动态排序
-        allowed_sort_fields = {"id", "name", "created_at"}
+        allowed_sort_fields = {"id", "name", "created_at", "sort_order"}
         if sort_by not in allowed_sort_fields:
-            sort_by = "id"
+            sort_by = "sort_order"
         sort_column = getattr(Community, sort_by)
-        if sort_order.lower() == "asc":
-            query = query.order_by(sort_column.asc())
-        else:
+        if sort_order.lower() == "desc":
             query = query.order_by(sort_column.desc())
+        else:
+            query = query.order_by(sort_column.asc())
 
         return query.offset(skip).limit(limit).all()
 
