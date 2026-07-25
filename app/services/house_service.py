@@ -228,6 +228,7 @@ class HouseService:
             "decoration": house.decoration,
             "key_type": house.key_type,
             "lock_password": lock_password,
+            "media": house.media,
             "video_url": house.video_url,
             "images": house.images,
             "description": house.description,

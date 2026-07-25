@@ -1,12 +1,15 @@
 """
 房源管理系统 - FastAPI 应用入口
 """
+import os
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import HTTPException as FastAPIHTTPException, RequestValidationError
 
-from app.api.v1 import auth, houses, communities, appliances, users
+from app.api.v1 import auth, houses, communities, appliances, users, upload
 from app.core.config import settings
 from app.db.session import engine, Base
 from app.schemas.response import ok, fail
@@ -30,6 +33,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 静态文件服务（上传文件）
+_upload_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
+os.makedirs(_upload_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=_upload_dir), name="uploads")
 
 
 # ---------- 全局异常处理：统一返回 {code, msg, data} ----------
@@ -71,6 +79,7 @@ app.include_router(houses.router, prefix="/api/v1/houses", tags=["房源"])
 app.include_router(communities.router, prefix="/api/v1/communities", tags=["小区"])
 app.include_router(appliances.router, prefix="/api/v1/appliances", tags=["家电"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["账号"])
+app.include_router(upload.router, prefix="/api/v1/upload", tags=["上传"])
 
 
 @app.get("/", tags=["健康检查"])

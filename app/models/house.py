@@ -68,6 +68,7 @@ class House(Base):
     )
 
     # 多媒体
+    media: Mapped[list | None] = mapped_column(JSON, nullable=True, comment="媒体文件数组(图片+视频)")
     video_url: Mapped[str | None] = mapped_column(String(500), nullable=True, comment="视频URL")
     images: Mapped[list | None] = mapped_column(JSON, nullable=True, comment="图片URL数组")
     description: Mapped[str | None] = mapped_column(Text, nullable=True, comment="房源描述")
