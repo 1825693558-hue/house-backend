@@ -40,12 +40,17 @@ async def list_communities(
     page: int = Query(default=1, ge=1),
     size: int = Query(default=100, ge=1, le=1000),
     simple: bool = Query(default=False, description="是否返回简洁模式(下拉选择用)"),
+    sort_by: str = Query(default="id", description="排序字段: id, name, created_at"),
+    sort_order: str = Query(default="desc", description="排序方向: asc, desc"),
     db: Session = Depends(get_db),
     _current_user: User = Depends(get_current_user),
 ):
-    """获取小区列表"""
+    """获取小区列表（支持排序）"""
     skip = (page - 1) * size
-    communities = community_crud.get_list(db, keyword=keyword, skip=skip, limit=size)
+    communities = community_crud.get_list(
+        db, keyword=keyword, skip=skip, limit=size,
+        sort_by=sort_by, sort_order=sort_order,
+    )
     total = community_crud.get_count(db, keyword=keyword)
 
     if simple:

@@ -22,13 +22,26 @@ class CRUDCommunity(CRUDBase[Community]):
         keyword: str | None = None,
         skip: int = 0,
         limit: int = 100,
+        sort_by: str = "id",
+        sort_order: str = "desc",
     ) -> list[Community]:
         query = db.query(Community).filter(
             Community.is_deleted == False,  # noqa: E712
         )
         if keyword:
             query = query.filter(Community.name.contains(keyword))
-        return query.order_by(Community.id.desc()).offset(skip).limit(limit).all()
+
+        # 动态排序
+        allowed_sort_fields = {"id", "name", "created_at"}
+        if sort_by not in allowed_sort_fields:
+            sort_by = "id"
+        sort_column = getattr(Community, sort_by)
+        if sort_order.lower() == "asc":
+            query = query.order_by(sort_column.asc())
+        else:
+            query = query.order_by(sort_column.desc())
+
+        return query.offset(skip).limit(limit).all()
 
     def get_count(self, db: Session, keyword: str | None = None) -> int:
         from sqlalchemy import func
