@@ -38,7 +38,7 @@ async def create_community(
 async def list_communities(
     keyword: str | None = Query(default=None, description="搜索关键词"),
     page: int = Query(default=1, ge=1),
-    size: int = Query(default=100, ge=1, le=100),
+    size: int = Query(default=100, ge=1, le=1000),
     simple: bool = Query(default=False, description="是否返回简洁模式(下拉选择用)"),
     db: Session = Depends(get_db),
     _current_user: User = Depends(get_current_user),
