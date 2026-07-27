@@ -31,6 +31,15 @@ class Settings(BaseSettings):
     LOGIN_RATE_LIMIT_MAX: int = 10
     LOGIN_RATE_LIMIT_WINDOW: int = 300  # 秒
 
+    # 腾讯云 COS
+    COS_SECRET_ID: str = ""
+    COS_SECRET_KEY: str = ""
+    COS_REGION: str = "ap-shanghai"
+    COS_BUCKET: str = ""
+    COS_DOMAIN: str = ""  # 自定义 CDN 域名（可选），例如 https://cdn.example.com
+    COS_ALLOWED_TYPES: str = "image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime"
+    COS_MAX_SIZE_MB: int = 200
+
     @property
     def allowed_origins_list(self) -> List[str]:
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]

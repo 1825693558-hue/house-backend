@@ -21,3 +21,6 @@ email-validator==2.2.0
 
 # 工具
 python-dotenv==1.0.1
+
+# 腾讯云 COS
+cos-python-sdk-v5==1.9.36
