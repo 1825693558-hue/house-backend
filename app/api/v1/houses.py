@@ -35,7 +35,7 @@ async def create_house(
 @router.get("")
 async def list_houses(
     page: int = Query(default=1, ge=1, description="页码"),
-    size: int = Query(default=20, ge=1, le=1000, description="每页条数"),
+    size: int = Query(default=20, ge=1, le=100, description="每页条数"),
     keyword: str | None = Query(default=None, description="关键词搜索"),
     community_id: int | None = Query(default=None, description="按小区筛选"),
     status: str | None = Query(default=None, description="按状态筛选(逗号分隔)"),
@@ -47,6 +47,7 @@ async def list_houses(
     max_floor: int | None = Query(default=None, description="最大楼层"),
     start_date: date | None = Query(default=None, description="创建时间起始"),
     end_date: date | None = Query(default=None, description="创建时间截止"),
+    house_use_type: str | None = Query(default=None, description="房源用途类型: sale=出售, rent=出租"),
     db: Session = Depends(get_db),
     _current_user: User = Depends(get_current_user),
 ):
@@ -66,6 +67,7 @@ async def list_houses(
         max_floor=max_floor,
         start_date=start_date,
         end_date=end_date,
+        house_use_type=house_use_type,
     )
 
     return ok(data={

@@ -45,6 +45,7 @@ class CRUDHouse(CRUDBase[House]):
         max_floor: int | None = None,
         start_date: date | None = None,
         end_date: date | None = None,
+        house_use_type: str | None = None,
     ) -> tuple[list[dict], int]:
         """
         多条件查询房源
@@ -121,6 +122,14 @@ class CRUDHouse(CRUDBase[House]):
         if end_date:
             query = query.filter(House.created_at <= end_date)
             count_query = count_query.filter(House.created_at <= end_date)
+
+        # 房源用途类型筛选（sale=出售, rent=出租）
+        if house_use_type == "sale":
+            query = query.filter(House.sale_price.isnot(None))
+            count_query = count_query.filter(House.sale_price.isnot(None))
+        elif house_use_type == "rent":
+            query = query.filter(House.rent_price.isnot(None))
+            count_query = count_query.filter(House.rent_price.isnot(None))
 
         # 总数
         total = count_query.scalar() or 0
