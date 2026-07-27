@@ -4,7 +4,7 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from app.services.cos_service import upload_file
 from app.schemas.response import ok, fail
-from app.api.deps import get_current_user
+from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.core.config import settings
 
