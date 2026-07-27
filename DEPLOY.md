@@ -1,4 +1,4 @@
-# AI House Backend - Docker 生产部署指南
+# 建华中介 Backend - Docker 生产部署指南
 
 ## 目录
 
@@ -108,7 +108,7 @@ cd /opt/ai-house
 # 安装为 systemd 服务
 cat > /etc/systemd/system/ai-house-webhook.service << 'EOF'
 [Unit]
-Description=AI House Webhook Server
+Description=建华中介 Webhook Server
 After=network.target
 
 [Service]
