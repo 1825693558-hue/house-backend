@@ -4,8 +4,8 @@
 from datetime import date
 from typing import Any
 
-from sqlalchemy import Select, func, or_, select
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func, or_
+from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBase
 from app.models.house import House
@@ -13,21 +13,6 @@ from app.models.community import Community
 
 
 class CRUDHouse(CRUDBase[House]):
-    def get_with_details(self, db: Session, house_id: int) -> House | None:
-        return (
-            db.query(House)
-            .options(
-                joinedload(House.community),
-                joinedload(House.contacts),
-                joinedload(House.house_appliances).joinedload(
-                    # noqa: F821 - lazy import
-                    __import__("app.models.house_appliance", fromlist=["HouseAppliance"]).HouseAppliance.appliance
-                ) if False else None,  # 使用 selectin 已在 model 中配置
-            )
-            .filter(House.id == house_id)
-            .first()
-        )
-
     def query_houses(
         self,
         db: Session,

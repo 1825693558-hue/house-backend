@@ -1,7 +1,7 @@
 """
 基础 CRUD 封装 - 通用数据库操作（含软删除）
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TypeVar, Generic, Type, Sequence
 
 from pydantic import BaseModel
@@ -74,7 +74,7 @@ class CRUDBase(Generic[ModelType]):
         ).first()
         if obj:
             obj.is_deleted = True
-            obj.deleted_at = datetime.now()
+            obj.deleted_at = datetime.now(timezone.utc)
             db.flush()
             return True
         return False

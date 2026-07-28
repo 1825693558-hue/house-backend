@@ -1,7 +1,9 @@
 """
 房源管理系统 - FastAPI 应用入口
 """
+import logging
 import os
+import traceback
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,10 +11,12 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import HTTPException as FastAPIHTTPException, RequestValidationError
 
-from app.api.v1 import auth, houses, communities, appliances, users, upload
+from app.api.v1 import auth, houses, communities, appliances, users, upload, export
 from app.core.config import settings
 from app.db.session import engine, Base
 from app.schemas.response import ok, fail
+
+logger = logging.getLogger(__name__)
 
 # 创建数据库表（开发阶段使用，生产环境应通过 Alembic 迁移）
 # Base.metadata.create_all(bind=engine)
@@ -67,6 +71,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     """未捕获异常统一包装"""
+    logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
+    if settings.DEBUG:
+        return JSONResponse(
+            status_code=500,
+            content=fail(code=500, msg=f"服务器内部错误: {str(exc)}"),
+        )
     return JSONResponse(
         status_code=500,
         content=fail(code=500, msg="服务器内部错误"),
@@ -80,6 +90,7 @@ app.include_router(communities.router, prefix="/api/v1/communities", tags=["小�
 app.include_router(appliances.router, prefix="/api/v1/appliances", tags=["家电"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["账号"])
 app.include_router(upload.router, prefix="/api/v1/upload", tags=["上传"])
+app.include_router(export.router, prefix="/api/v1/export", tags=["导出"])
 
 
 @app.get("/", tags=["健康检查"])

@@ -61,9 +61,10 @@ def _get_aes_key() -> bytes:
 
 
 def aes_encrypt(plaintext: str) -> str:
-    """AES-256-CBC 加密，返回 base64 编码的密文"""
+    """AES-256-CBC 加密，返回 base64 编码的密文（IV 拼接在密文前面）"""
+    import os
     key = _get_aes_key()
-    iv = hashlib.md5(key).digest()[:16]  # 固定 IV，基于密钥派生
+    iv = os.urandom(16)  # 每次随机生成 IV
     cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
     encryptor = cipher.encryptor()
 
@@ -73,17 +74,19 @@ def aes_encrypt(plaintext: str) -> str:
     padded = plaintext.encode("utf-8") + bytes([padding] * padding)
 
     ciphertext = encryptor.update(padded) + encryptor.finalize()
-    return base64.b64encode(ciphertext).decode("utf-8")
+    # IV + 密文拼接后 base64 编码
+    return base64.b64encode(iv + ciphertext).decode("utf-8")
 
 
 def aes_decrypt(ciphertext_b64: str) -> str:
-    """AES-256-CBC 解密，输入 base64 编码的密文，返回明文"""
+    """AES-256-CBC 解密，输入 base64 编码的密文（含 IV），返回明文"""
     key = _get_aes_key()
-    iv = hashlib.md5(key).digest()[:16]
+    raw = base64.b64decode(ciphertext_b64)
+    iv = raw[:16]  # 前 16 字节为 IV
+    ciphertext = raw[16:]
     cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
     decryptor = cipher.decryptor()
 
-    ciphertext = base64.b64decode(ciphertext_b64)
     padded = decryptor.update(ciphertext) + decryptor.finalize()
 
     # 去除 PKCS7 填充

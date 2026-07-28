@@ -4,8 +4,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import require_admin
+from app.core.dependencies import require_admin, get_current_user
 from app.crud.appliance import appliance_crud
+from app.models.user import User
 from app.db.session import get_db
 from app.schemas.appliance import ApplianceCreate, ApplianceUpdate, ApplianceOut
 from app.schemas.response import ok
@@ -29,9 +30,9 @@ async def create_appliance(
 @router.get("")
 async def list_appliances(
     db: Session = Depends(get_db),
-    _=Depends(require_admin),
+    _current_user: User = Depends(get_current_user),
 ):
-    """获取家电类型列表（ADMIN）"""
+    """获取家电类型列表（登录用户均可访问）"""
     appliances = appliance_crud.get_list(db)
     total = appliance_crud.get_count(db)
 

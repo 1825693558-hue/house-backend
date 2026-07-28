@@ -1,7 +1,7 @@
 """
 房源业务逻辑 - 包含状态流转校验
 """
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import orm
 from sqlalchemy.orm import Session
@@ -157,7 +157,7 @@ class HouseService:
     def delete_house(db: Session, house: House) -> None:
         """软删除房源（标记 is_deleted，不物理删除）"""
         house.is_deleted = True
-        house.deleted_at = datetime.now()
+        house.deleted_at = datetime.now(timezone.utc)
         db.commit()
 
     @staticmethod
@@ -182,23 +182,27 @@ class HouseService:
             .all()
         )
 
-        # 房源-家电关联 + 家电名称
+        # 房源-家电关联 + 家电名称（批量查询避免 N+1）
         ha_list = (
             db.query(HouseAppliance)
             .filter(HouseAppliance.house_id == house_id)
             .all()
         )
-        appliances = []
-        for ha in ha_list:
-            # 手动查询家电名称（避免循环导入问题）
-            from app.models.appliance import Appliance
-            app_obj = db.query(Appliance).filter(Appliance.id == ha.appliance_id).first()
-            appliances.append({
+        from app.models.appliance import Appliance
+        appliance_ids = [ha.appliance_id for ha in ha_list]
+        appliance_map = {}
+        if appliance_ids:
+            for app_obj in db.query(Appliance).filter(Appliance.id.in_(appliance_ids)).all():
+                appliance_map[app_obj.id] = app_obj.name
+        appliances = [
+            {
                 "id": ha.id,
                 "appliance_id": ha.appliance_id,
-                "appliance_name": app_obj.name if app_obj else None,
+                "appliance_name": appliance_map.get(ha.appliance_id),
                 "note": ha.note,
-            })
+            }
+            for ha in ha_list
+        ]
 
         # 解密密码锁密码
         lock_password = None
