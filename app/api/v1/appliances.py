@@ -4,7 +4,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import require_admin, get_current_user
+from app.core.dependencies import require_admin, get_current_user, get_current_user_optional
 from app.crud.appliance import appliance_crud
 from app.models.user import User
 from app.db.session import get_db
@@ -30,9 +30,9 @@ async def create_appliance(
 @router.get("")
 async def list_appliances(
     db: Session = Depends(get_db),
-    _current_user: User = Depends(get_current_user),
+    _current_user: User | None = Depends(get_current_user_optional),
 ):
-    """获取家电类型列表（登录用户均可访问）"""
+    """获取家电类型列表（匿名可访问）"""
     appliances = appliance_crud.get_list(db)
     total = appliance_crud.get_count(db)
 

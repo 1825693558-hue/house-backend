@@ -6,7 +6,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_current_user, require_admin
+from app.core.dependencies import get_current_user, get_current_user_optional, require_admin
 from app.crud.house import house_crud
 from app.db.session import get_db
 from app.models.user import User
@@ -49,9 +49,9 @@ async def list_houses(
     end_date: date | None = Query(default=None, description="创建时间截止"),
     house_use_type: str | None = Query(default=None, description="房源用途类型: sale=出售, rent=出租"),
     db: Session = Depends(get_db),
-    _current_user: User = Depends(get_current_user),
+    _current_user: User | None = Depends(get_current_user_optional),
 ):
-    """查询房源列表（分页+多条件筛选）"""
+    """查询房源列表（分页+多条件筛选，支持匿名访问）"""
     items, total = house_crud.query_houses(
         db,
         page=page,
@@ -82,9 +82,9 @@ async def list_houses(
 async def get_house(
     house_id: int,
     db: Session = Depends(get_db),
-    _current_user: User = Depends(get_current_user),
+    _current_user: User | None = Depends(get_current_user_optional),
 ):
-    """获取房源详情"""
+    """获取房源详情（支持匿名访问）"""
     detail = house_service.get_house_detail(db, house_id)
     if not detail:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="房源不存在")

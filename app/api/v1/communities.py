@@ -4,7 +4,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_current_user, require_admin
+from app.core.dependencies import get_current_user, get_current_user_optional, require_admin
 from app.crud.community import community_crud
 from app.db.session import get_db
 from app.models.user import User
@@ -43,9 +43,9 @@ async def list_communities(
     sort_by: str = Query(default="sort_order", description="排序字段: id, name, created_at, sort_order"),
     sort_order: str = Query(default="asc", description="排序方向: asc, desc"),
     db: Session = Depends(get_db),
-    _current_user: User = Depends(get_current_user),
+    _current_user: User | None = Depends(get_current_user_optional),
 ):
-    """获取小区列表（支持排序）"""
+    """获取小区列表（支持排序，匿名可访问）"""
     skip = (page - 1) * size
     communities = community_crud.get_list(
         db, keyword=keyword, skip=skip, limit=size,

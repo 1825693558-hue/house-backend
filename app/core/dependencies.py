@@ -11,6 +11,7 @@ from app.db.session import get_db
 from app.models.user import User
 
 security_scheme = HTTPBearer()
+optional_security_scheme = HTTPBearer(auto_error=False)
 
 
 def get_current_user(
@@ -44,6 +45,31 @@ def get_current_user(
             detail="用户不存在",
         )
 
+    return user
+
+
+def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials | None = Depends(optional_security_scheme),
+    db: Session = Depends(get_db),
+) -> User | None:
+    """获取当前登录用户，未登录返回 None（供公开接口使用）"""
+    if credentials is None:
+        return None
+
+    token = credentials.credentials
+    payload = decode_access_token(token)
+
+    if payload is None:
+        return None
+
+    user_id = payload.get("sub")
+    if user_id is None:
+        return None
+
+    user = db.query(User).filter(
+        User.id == int(user_id),
+        User.is_deleted == False,  # noqa: E712
+    ).first()
     return user
 
 
