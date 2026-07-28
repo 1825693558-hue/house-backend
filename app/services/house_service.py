@@ -161,6 +161,65 @@ class HouseService:
         db.commit()
 
     @staticmethod
+    def get_public_detail(db: Session, house_id: int) -> dict | None:
+        """获取房源公开详情（不含地址、描述、钥匙、密码、联系人）"""
+        house = (
+            db.query(House)
+            .options(orm.selectinload(House.community))
+            .filter(
+                House.id == house_id,
+                House.is_deleted == False,  # noqa: E712
+            )
+            .first()
+        )
+        if not house:
+            return None
+
+        # 房源-家电关联 + 家电名称（批量查询避免 N+1）
+        ha_list = (
+            db.query(HouseAppliance)
+            .filter(HouseAppliance.house_id == house_id)
+            .all()
+        )
+        from app.models.appliance import Appliance
+        appliance_ids = [ha.appliance_id for ha in ha_list]
+        appliance_map = {}
+        if appliance_ids:
+            for app_obj in db.query(Appliance).filter(Appliance.id.in_(appliance_ids)).all():
+                appliance_map[app_obj.id] = app_obj.name
+        appliances = [
+            {
+                "id": ha.id,
+                "appliance_id": ha.appliance_id,
+                "appliance_name": appliance_map.get(ha.appliance_id),
+                "note": ha.note,
+            }
+            for ha in ha_list
+        ]
+
+        return {
+            "id": house.id,
+            "community_id": house.community_id,
+            "community": {
+                "id": house.community.id,
+                "name": house.community.name,
+            } if house.community else None,
+            "area": float(house.area) if house.area else None,
+            "floor": house.floor,
+            "total_floors": house.total_floors,
+            "sale_price": float(house.sale_price) if house.sale_price else None,
+            "rent_price": float(house.rent_price) if house.rent_price else None,
+            "price_note": house.price_note,
+            "status": house.status,
+            "house_type": house.house_type,
+            "decoration": house.decoration,
+            "media": house.media,
+            "video_url": house.video_url,
+            "images": house.images,
+            "appliances": appliances,
+        }
+
+    @staticmethod
     def get_house_detail(db: Session, house_id: int) -> dict:
         """获取房源详情（含解密密码锁密码、联系人、家电）"""
         house = (

@@ -146,3 +146,16 @@ async def delete_house(
     house_service.delete_house(db, house=house)
 
     return ok(msg="删除成功")
+
+
+@router.get("/{house_id}/public")
+async def get_public_house(
+    house_id: int,
+    db: Session = Depends(get_db),
+):
+    """获取房源公开详情（无需登录，仅返回基本信息）"""
+    detail = house_service.get_public_detail(db, house_id)
+    if not detail:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="房源不存在")
+
+    return ok(data=detail)
