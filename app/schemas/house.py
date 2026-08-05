@@ -101,7 +101,7 @@ class HouseStatusUpdate(BaseModel):
 
 class HouseQuery(BaseModel):
     page: int = Field(default=1, ge=1, description="页码")
-    size: int = Field(default=20, ge=1, le=100, description="每页条数")
+    size: int = Field(default=20, ge=1, le=1000, description="每页条数")
     keyword: str | None = Field(None, description="关键词搜索")
     community_id: int | None = Field(None, description="按小区筛选")
     status: str | None = Field(None, description="按状态筛选(逗号分隔)")

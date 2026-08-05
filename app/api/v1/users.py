@@ -41,7 +41,7 @@ async def create_user(
 @router.get("", dependencies=[Depends(require_admin)])
 async def list_users(
     page: int = Query(default=1, ge=1),
-    size: int = Query(default=20, ge=1, le=100),
+    size: int = Query(default=20, ge=1, le=1000),
     db: Session = Depends(get_db),
 ):
     """账号列表（ADMIN）"""
